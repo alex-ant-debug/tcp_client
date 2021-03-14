@@ -41,7 +41,7 @@ MyClient::MyClient(QString settingsPath, QWidget *parent):
 void MyClient::slotReadyRead()
 {
     QDataStream in(m_pTcpSocket);
-    in.setVersion(QDataStream::Qt_4_2);
+    in.setVersion(QDataStream::Qt_5_9);
     for (;;) {
         if (!m_nNextBlockSize) {
             if (m_pTcpSocket->bytesAvailable() < sizeof(quint16)) {
@@ -74,6 +74,16 @@ void MyClient::slotReadyRead()
             {
                 incrementedValueString += " " + QString::number(incrementedValue.at(i));
             }
+
+            QFile *myBinaryFile = new QFile(QDir::currentPath() + "/dataFile.dat");
+            myBinaryFile->open(QIODevice::WriteOnly);
+            QDataStream binaryDataStream(myBinaryFile);
+            binaryDataStream.setVersion(QDataStream::Qt_5_9);
+
+            binaryDataStream << incrementedValue;
+
+            myBinaryFile->close();
+            myBinaryFile->deleteLater();
 
             m_ptxtInfo->append(time.toString() + " " + incrementedValueString);
         }
@@ -114,7 +124,7 @@ void MyClient::slotSendToServer()
 {
     QByteArray  arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_4_2);
+    out.setVersion(QDataStream::Qt_5_9);
 
     out << quint16(0) << protocolVersion << QTime::currentTime() << valueToSend;
 
