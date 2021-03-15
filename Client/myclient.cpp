@@ -80,9 +80,11 @@ void MyClient::slotReadyRead()
             myBinaryFile->deleteLater();
 
             m_ptxtInfo->append(time.toString() + " " + incrementedValueString);
+
+            /////
             m_pTcpSocket->disconnectFromHost();
 
-            QString closedConnection = time.toString() + " " + "Connection closed";
+            QString closedConnection = time.toString() + " " + "Disconnect from host";
             m_ptxtInfo->append(closedConnection);
             writeToLog(closedConnection);
         }

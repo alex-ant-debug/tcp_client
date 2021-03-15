@@ -1,0 +1,1 @@
+Before project's running you must put settings file to  project's build directory.
