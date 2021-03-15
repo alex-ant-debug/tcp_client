@@ -19,22 +19,16 @@ MyClient::MyClient(QString settingsPath, QWidget *parent):
     m_pTcpSocket->connectToHost(host, port);
     connect(m_pTcpSocket, SIGNAL(connected()), SLOT(slotConnected()));
     connect(m_pTcpSocket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
-    connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this,         SLOT(slotError(QAbstractSocket::SocketError))
-           );
+    connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotError(QAbstractSocket::SocketError)));
 
     m_ptxtInfo  = new QTextEdit;
 
     m_ptxtInfo->setReadOnly(true);
 
-    QPushButton* pcmd = new QPushButton("&Send");
-    connect(pcmd, SIGNAL(clicked()), SLOT(slotSendToServer()));
-
     //Layout setup
     QVBoxLayout* pvbxLayout = new QVBoxLayout;
     pvbxLayout->addWidget(new QLabel("<H1>Client</H1>"));
     pvbxLayout->addWidget(m_ptxtInfo);
-    pvbxLayout->addWidget(pcmd);
     setLayout(pvbxLayout);
 }
 
@@ -86,6 +80,11 @@ void MyClient::slotReadyRead()
             myBinaryFile->deleteLater();
 
             m_ptxtInfo->append(time.toString() + " " + incrementedValueString);
+            m_pTcpSocket->disconnectFromHost();
+
+            QString closedConnection = time.toString() + " " + "Connection closed";
+            m_ptxtInfo->append(closedConnection);
+            writeToLog(closedConnection);
         }
         else if(messageType == "error")
         {
@@ -98,7 +97,6 @@ void MyClient::slotReadyRead()
 
             writeToLog(logMessage);
         }
-
 
         m_nNextBlockSize = 0;
     }
@@ -137,6 +135,8 @@ void MyClient::slotSendToServer()
 void MyClient::slotConnected()
 {
     m_ptxtInfo->append("Received the connected() signal");
+    delay(3000);
+    slotSendToServer();
 }
 
 bool MyClient::readSettings(void)
@@ -200,4 +200,13 @@ void MyClient::writeToLog(QString str)
     QTextStream out(&file);
     out << str<<endl;
     file.close();
+}
+
+inline void MyClient::delay(int millisecondsWait)
+{
+    QEventLoop loop;
+    QTimer t;
+    t.connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+    t.start(millisecondsWait);
+    loop.exec();
 }

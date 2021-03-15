@@ -5,10 +5,10 @@
 #include <QTcpSocket>
 #include <QTextEdit>
 #include <QLineEdit>
-#include <QPushButton>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QTime>
+#include <QTimer>
 #include <QDir>
 #include <QTextStream>
 
@@ -26,6 +26,7 @@ class MyClient : public QWidget
 public:
     explicit MyClient(QString settingsPath, QWidget *parent = 0);
     bool checkSettings(void);
+    inline void delay(int millisecondsWait);
     ~MyClient();
 
 private:
