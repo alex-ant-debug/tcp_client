@@ -1,38 +1,27 @@
 #ifndef MYCLIENT_H
 #define MYCLIENT_H
 
-#include <QWidget>
 #include <QTcpSocket>
-#include <QTextEdit>
-#include <QLineEdit>
-#include <QVBoxLayout>
-#include <QLabel>
+#include <QObject>
 #include <QTime>
 #include <QTimer>
 #include <QDir>
 #include <QTextStream>
+#include <QDataStream>
+#include <QEventLoop>
 
-class QTextEdit;
-class QLineEdit;
-
-namespace Ui {
-class MyClient;
-}
-
-class MyClient : public QWidget
+class MyClient : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit MyClient(QString settingsPath, QWidget *parent = 0);
+    explicit MyClient(QObject * obj = 0);
     bool checkSettings(void);
     inline void delay(int millisecondsWait);
     ~MyClient();
 
 private:
-    Ui::MyClient *ui;
     QTcpSocket* m_pTcpSocket;
-    QTextEdit*  m_ptxtInfo;
     quint16     m_nNextBlockSize;
     bool readSettings(void);
     void writeToLog(QString str);

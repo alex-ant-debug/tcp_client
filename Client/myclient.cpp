@@ -1,35 +1,21 @@
 #include "myclient.h"
-#include "ui_myclient.h"
 #include <QFile>
-#include <QMessageBox>
 
-MyClient::MyClient(QString settingsPath, QWidget *parent):
-    QWidget(parent),
-    m_nNextBlockSize(0),
-    ui(new Ui::MyClient)
+MyClient::MyClient(QObject * obj):
+    QObject(obj),
+    m_nNextBlockSize(0)
 {
     readSettings();
     if(!isSettingsCorrect)
     {
         return;
     }
-    ui->setupUi(this);
     m_pTcpSocket = new QTcpSocket(this);
 
     m_pTcpSocket->connectToHost(host, port);
     connect(m_pTcpSocket, SIGNAL(connected()), SLOT(slotConnected()));
     connect(m_pTcpSocket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
     connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotError(QAbstractSocket::SocketError)));
-
-    m_ptxtInfo  = new QTextEdit;
-
-    m_ptxtInfo->setReadOnly(true);
-
-    //Layout setup
-    QVBoxLayout* pvbxLayout = new QVBoxLayout;
-    pvbxLayout->addWidget(new QLabel("<H1>Client</H1>"));
-    pvbxLayout->addWidget(m_ptxtInfo);
-    setLayout(pvbxLayout);
 }
 
 void MyClient::slotReadyRead()
@@ -56,7 +42,6 @@ void MyClient::slotReadyRead()
             QString messageText;
             in >> messageText;
             QString logMessage = time.toString() + " " + messageText;
-            m_ptxtInfo->append(logMessage);
             writeToLog(logMessage);
         }
         else if(messageType == "incremented_value")
@@ -69,6 +54,7 @@ void MyClient::slotReadyRead()
                 incrementedValueString += " " + QString::number(incrementedValue.at(i));
             }
 
+            writeToLog(time.toString() + " " + "Incremented value is received");
             QFile *myBinaryFile = new QFile(QDir::currentPath() + "/dataFile.dat");
             myBinaryFile->open(QIODevice::WriteOnly);
             QDataStream binaryDataStream(myBinaryFile);
@@ -79,13 +65,9 @@ void MyClient::slotReadyRead()
             myBinaryFile->close();
             myBinaryFile->deleteLater();
 
-            m_ptxtInfo->append(time.toString() + " " + incrementedValueString);
-
-            /////
             m_pTcpSocket->disconnectFromHost();
 
             QString closedConnection = time.toString() + " " + "Disconnect from host";
-            m_ptxtInfo->append(closedConnection);
             writeToLog(closedConnection);
         }
         else if(messageType == "error")
@@ -95,7 +77,6 @@ void MyClient::slotReadyRead()
             int error;
             in >> error>>messageText;
             logMessage = time.toString() + " " + "Error " + QString::number(error) + ": " + messageText;
-            m_ptxtInfo->append(logMessage);
 
             writeToLog(logMessage);
         }
@@ -115,7 +96,6 @@ void MyClient::slotError(QAbstractSocket::SocketError err)
                      "The connection was refused." :
                      QString(m_pTcpSocket->errorString())
                     );
-    m_ptxtInfo->append(strError);
 
     writeToLog(strError);
 }
@@ -136,7 +116,6 @@ void MyClient::slotSendToServer()
 
 void MyClient::slotConnected()
 {
-    m_ptxtInfo->append("Received the connected() signal");
     delay(3000);
     slotSendToServer();
 }
@@ -149,9 +128,7 @@ bool MyClient::readSettings(void)
 
     if (!file.open(QIODevice::ReadOnly ))
     {
-        QMessageBox msgBox;
-        msgBox.setText("No settings file");
-        msgBox.exec();
+        writeToLog("No settings file");
         return false;
     }
 
@@ -167,17 +144,13 @@ bool MyClient::readSettings(void)
 
     if (host.isEmpty())
     {
-        QMessageBox msgBox;
-        msgBox.setText("Host is empty");
-        msgBox.exec();
+        writeToLog("Host is empty");
         return false;
     }
 
     if (port <= 0)
     {
-        QMessageBox msgBox;
-        msgBox.setText("Port has wrong value");
-        msgBox.exec();
+        writeToLog("Port has wrong value");
         return false;
     }
 
@@ -192,7 +165,8 @@ bool MyClient::checkSettings(void)
 
 MyClient::~MyClient()
 {
-    delete ui;
+    m_pTcpSocket->close();
+    delete m_pTcpSocket;
 }
 
 void MyClient::writeToLog(QString str)
