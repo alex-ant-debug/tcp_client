@@ -21,8 +21,8 @@ public:
     ~MyClient();
 
 private:
-    QTcpSocket* m_pTcpSocket;
-    quint16     m_nNextBlockSize;
+    QTcpSocket* tcpSocket;
+    quint16     nextBlockSize;
     bool readSettings(void);
     void writeToLog(QString str);
 

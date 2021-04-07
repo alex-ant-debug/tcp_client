@@ -3,34 +3,34 @@
 
 MyClient::MyClient(QObject * obj):
     QObject(obj),
-    m_nNextBlockSize(0)
+    nextBlockSize(0)
 {
     readSettings();
     if(!isSettingsCorrect)
     {
         return;
     }
-    m_pTcpSocket = new QTcpSocket(this);
+    tcpSocket = new QTcpSocket(this);
 
-    m_pTcpSocket->connectToHost(host, port);
-    connect(m_pTcpSocket, SIGNAL(connected()), SLOT(slotConnected()));
-    connect(m_pTcpSocket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
-    connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotError(QAbstractSocket::SocketError)));
+    tcpSocket->connectToHost(host, port);
+    connect(tcpSocket, SIGNAL(connected()), SLOT(slotConnected()));
+    connect(tcpSocket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
+    connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotError(QAbstractSocket::SocketError)));
 }
 
 void MyClient::slotReadyRead()
 {
-    QDataStream in(m_pTcpSocket);
+    QDataStream in(tcpSocket);
     in.setVersion(QDataStream::Qt_5_9);
     for (;;) {
-        if (!m_nNextBlockSize) {
-            if (m_pTcpSocket->bytesAvailable() < sizeof(quint16)) {
+        if (!nextBlockSize) {
+            if (tcpSocket->bytesAvailable() < sizeof(quint16)) {
                 break;
             }
-            in >> m_nNextBlockSize;
+            in >> nextBlockSize;
         }
 
-        if (m_pTcpSocket->bytesAvailable() < m_nNextBlockSize) {
+        if (tcpSocket->bytesAvailable() < nextBlockSize) {
             break;
         }
         QTime   time;
@@ -65,7 +65,7 @@ void MyClient::slotReadyRead()
             myBinaryFile->close();
             myBinaryFile->deleteLater();
 
-            m_pTcpSocket->disconnectFromHost();
+            tcpSocket->disconnectFromHost();
 
             QString closedConnection = time.toString() + " " + "Disconnect from host";
             writeToLog(closedConnection);
@@ -81,7 +81,7 @@ void MyClient::slotReadyRead()
             writeToLog(logMessage);
         }
 
-        m_nNextBlockSize = 0;
+        nextBlockSize = 0;
     }
 }
 
@@ -94,7 +94,7 @@ void MyClient::slotError(QAbstractSocket::SocketError err)
                      "The remote host is closed." :
                      err == QAbstractSocket::ConnectionRefusedError ?
                      "The connection was refused." :
-                     QString(m_pTcpSocket->errorString())
+                     QString(tcpSocket->errorString())
                     );
 
     writeToLog(strError);
@@ -111,7 +111,7 @@ void MyClient::slotSendToServer()
     out.device()->seek(0);
     out << quint16(arrBlock.size() - sizeof(quint16));
 
-    m_pTcpSocket->write(arrBlock);
+    tcpSocket->write(arrBlock);
 }
 
 void MyClient::slotConnected()
@@ -165,8 +165,8 @@ bool MyClient::checkSettings(void)
 
 MyClient::~MyClient()
 {
-    m_pTcpSocket->close();
-    delete m_pTcpSocket;
+    tcpSocket->close();
+    delete tcpSocket;
 }
 
 void MyClient::writeToLog(QString str)
