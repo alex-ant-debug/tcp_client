@@ -64,6 +64,7 @@ void MyClient::slotReadyRead()
 
             myBinaryFile->close();
             myBinaryFile->deleteLater();
+            delete myBinaryFile;
 
             tcpSocket->disconnectFromHost();
 
@@ -167,6 +168,7 @@ MyClient::~MyClient()
 {
     tcpSocket->close();
     delete tcpSocket;
+
 }
 
 void MyClient::writeToLog(QString str)
