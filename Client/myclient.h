@@ -22,7 +22,7 @@ public:
 
 private:
     QTcpSocket* tcpSocket;
-    quint16     nextBlockSize;
+    quint32     nextBlockSize;
     bool readSettings(void);
     void writeToLog(QString str);
 

@@ -24,7 +24,7 @@ void MyClient::slotReadyRead()
     in.setVersion(QDataStream::Qt_5_9);
     for (;;) {
         if (!nextBlockSize) {
-            if (tcpSocket->bytesAvailable() < sizeof(quint16)) {
+            if (tcpSocket->bytesAvailable() < sizeof(quint32)) {
                 break;
             }
             in >> nextBlockSize;
@@ -48,12 +48,6 @@ void MyClient::slotReadyRead()
         {
             QVector<double>  incrementedValue;
             in >> incrementedValue;
-            QString incrementedValueString;
-            for(int i = 0; i < incrementedValue.size(); i++)
-            {
-                incrementedValueString += " " + QString::number(incrementedValue.at(i));
-            }
-
             writeToLog(time.toString() + " " + "Incremented value is received");
             QFile *myBinaryFile = new QFile(QDir::currentPath() + "/dataFile.dat");
             myBinaryFile->open(QIODevice::WriteOnly);
@@ -107,10 +101,10 @@ void MyClient::slotSendToServer()
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_9);
 
-    out << quint16(0) << protocolVersion << QTime::currentTime() << valueToSend;
+    out << quint32(0) << protocolVersion << QTime::currentTime() << valueToSend;
 
     out.device()->seek(0);
-    out << quint16(arrBlock.size() - sizeof(quint16));
+    out << quint32(arrBlock.size() - sizeof(quint32));
 
     tcpSocket->write(arrBlock);
 }
