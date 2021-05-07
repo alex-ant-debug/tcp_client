@@ -71,7 +71,14 @@ void MyClient::slotReadyRead()
             QString logMessage;
             int error;
             in >> error>>messageText;
-            logMessage = time.toString() + " " + "Error " + QString::number(error) + ": " + messageText;
+            logMessage = time.toString() + " Error " + QString::number(error) + ": " + messageText;
+
+            writeToLog(logMessage);
+        }
+        else
+        {
+            QString logMessage;
+            logMessage = time.toString() + " Error unknown message type";
 
             writeToLog(logMessage);
         }
