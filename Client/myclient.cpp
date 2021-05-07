@@ -167,6 +167,7 @@ bool MyClient::checkSettings(void)
 
 MyClient::~MyClient()
 {
+    tcpSocket->disconnectFromHost();
     tcpSocket->close();
     delete tcpSocket;
 
